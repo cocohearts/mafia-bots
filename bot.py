@@ -37,7 +37,6 @@ class LLM:
         logging.info(self.prompt)
         logging.info(query + rules[action])
         
-        
         completion = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[

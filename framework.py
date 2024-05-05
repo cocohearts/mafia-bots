@@ -70,6 +70,8 @@ class Identity:
         # target_index = self.game.names.index(target_name)
         target_index = next((index for index, name in enumerate(
             self.game.names) if name.lower() == target_name.lower()), None)
+        print(target_index)
+        print(target_name)
         target = self.game.identities[target_index]
 
         if self.blocked or action not in self.actions or not target.alive:
@@ -96,13 +98,14 @@ class Identity:
             self.client.send(self.listen())
             response = self.client.act()
             if response:
-                action, target = map(str.lower, response.split())
-                self.take_action(action, target)
-                self.game.callback("night_turn", {
-                    "player": self.name,
-                    "action": action,
-                    "target": target
-                })
+                if self.role != 'Villager':
+                    action, target = map(str.lower, response.split())
+                    self.take_action(action, target)
+                    self.game.callback("night_turn", {
+                        "player": self.name,
+                        "action": action,
+                        "target": target
+                    })
 
     def day_turn(self):
         """
@@ -223,8 +226,8 @@ class Game:
         votes = [identity.vote() for identity in self.identities]
         vote_counts = Counter(votes)
         max_votes = max(vote_counts.values())
-        most_voted = [name.strip() if name else None for name,
-                      count in vote_counts.items() if count == max_votes]
+        most_voted = [name for name, \
+                      count in vote_counts.items if count == max_votes]
         chosen = random.choice(most_voted)
         if chosen == 'nobody':
             return
@@ -268,5 +271,3 @@ class Game:
         else:
             result = None
         return result
-        if result := self.game_over():
-            return self.callback("game_over", result)
