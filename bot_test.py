@@ -20,7 +20,7 @@ def empty_callback(p1,p2):
 def main():
     clients = [Bot(prompts) for _ in range(len(roles))]
     my_game = Game(roles, names, clients, empty_callback)
-    my_game.play()
+    print(my_game.play())
 
 
 # Run the main function until it is complete
