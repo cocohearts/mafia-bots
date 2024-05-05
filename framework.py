@@ -239,9 +239,9 @@ class Game:
         """
         Starts a new round of the game, consisting of both night and day phases.
         """
-        self.broadcast("night", self.day_count)
+        self.callback("night", self.day_count)
         self.night()
-        self.broadcast("day", self.day_count)
+        self.callback("day", self.day_count)
         self.day()
         self.day_count += 1
 
