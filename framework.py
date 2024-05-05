@@ -197,6 +197,7 @@ class Game:
             return
 
         self.identities[self.names.index(chosen)].get_killed()
+        self.broadcast(f'{chosen} has been lynched.')
 
     def start_round(self):
         """
