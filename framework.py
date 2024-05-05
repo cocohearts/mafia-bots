@@ -225,7 +225,7 @@ class Game:
         vote_counts = Counter(votes)
         max_votes = max(vote_counts.values())
         most_voted = [name for name, \
-                      count in vote_counts.items if count == max_votes]
+                      count in vote_counts.items() if count == max_votes]
         chosen = random.choice(most_voted)
         if chosen == 'nobody':
             return
