@@ -4,23 +4,18 @@
   import Button from '$lib/components/ui/button/button.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
   import { socket } from '$lib/socketio';
+  import { uuidv4 } from '$lib/utils.js';
 
-  let chatInput;
+  let chatInput = '';
   const sendChatMessage = () => {
-    console.log(chatInput);
     socket.emit('message', chatInput);
+    chatInput = '';
   };
 
   onMount(() => {
     socket.on('connect', () => {
-      messages = [
-        ...messages,
-        {
-          timestamp: new Date(),
-          author: 'system',
-          content: `socket.io connected, sid: ${socket.id}`,
-        },
-      ];
+      console.log(`Socket.io connected, id: ${socket.id}`);
+      socket.emit('set_username', localStorage.getItem('username'));
     });
 
     return () => socket.off('connect');
