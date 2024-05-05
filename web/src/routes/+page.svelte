@@ -4,21 +4,40 @@
   import Button from '$lib/components/ui/button/button.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
   import { socket } from '$lib/socketio';
-  import { uuidv4 } from '$lib/utils.js';
 
-  let chatInput = '';
+  let chatInputElement;
   const sendChatMessage = () => {
-    socket.emit('message', chatInput);
-    chatInput = '';
+    socket.emit('message', chatInputElement.value);
+    chatInputElement.value = '';
   };
 
   onMount(() => {
+    // Socket things
     socket.on('connect', () => {
-      console.log(`Socket.io connected, id: ${socket.id}`);
+      console.log(`socket.io connected, id: ${socket.id}`);
       socket.emit('set_username', localStorage.getItem('username'));
+
+      // Welcome message
+      messages = [
+        ...messages,
+        {
+          timestamp: new Date(),
+          author: 'system',
+          content: 'welcome to mafia bots!',
+        },
+      ];
     });
 
-    return () => socket.off('connect');
+    socket.on('message', (data) => {
+      let raw_timestamp = data.timestamp;
+      data.timestamp = new Date(raw_timestamp * 1000);
+      messages = [...messages, data];
+    });
+
+    return () => {
+      socket.off('connect');
+      socket.off('message');
+    };
   }, []);
 
   // Page variables
@@ -46,7 +65,9 @@
             <span class="text-muted-foreground"
               >{message.timestamp.toLocaleTimeString()}</span
             >
-            <span class="text-muted-foreground">{message.author}</span>
+            <span class="text-muted-foreground"
+              >{message.author.split('-')[0]}</span
+            >
             <span>{message.content}</span>
           </div>
         {/each}
@@ -56,8 +77,8 @@
       <div class="flex gap-2 p-2">
         <Input
           on:keydown={(e) => e.key === 'Enter' && sendChatMessage()}
-          bind:value={chatInput}
           placeholder="Chat with the group..."
+          bind:this={chatInputElement}
         />
         <Button on:click={sendChatMessage}>Send</Button>
       </div>

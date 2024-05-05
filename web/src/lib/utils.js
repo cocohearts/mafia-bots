@@ -11,8 +11,6 @@ export const uuidv4 = () => {
   );
 };
 
-console.log(uuidv4());
-
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }

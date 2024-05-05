@@ -6,7 +6,8 @@ import os
 from dotenv import load_dotenv
 import random
 
-import logging, sys
+import logging
+import sys
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 # logging.debug('A debug message!')
@@ -16,10 +17,12 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 # load_dotenv()
 octoai = OctoAI()
 
+
 class LLM:
     def __init__(self, prompt):
-        self.prompt = prompt    
-    def call(self,query,action="speak"):
+        self.prompt = prompt
+
+    def call(self, query, action="speak"):
         rules = {
             "speak": "\nSpeak to the rest of the players. Communicate or obfuscate your intentions. You only have 100 tokens.",
             "act": "\nChoose an action. You must respond with exactly two words, the first being your action, and the second being the name of your target (could be yourself).",
@@ -39,11 +42,12 @@ class LLM:
         logging.info(response)
         return response
 
+
 class Bot:
     def __init__(self, prompts):
         self.prompts = prompts
 
-    def connect(self,identity):
+    def connect(self, identity):
         self.identity = identity
         prompt = f'\nNames are {self.identity.game.names}'
         prompt += f'\nRoles are {random.sample(self.identity.game.roles,len(self.identity.game.roles))}, in random order'
@@ -63,26 +67,27 @@ class Bot:
             message (str): The message received.
         """
         self.history = message
-    
+
     def respond(self):
         """Responds to the game instance with a message.
 
         Returns:
             str: Response to game
         """
-        return self.LLM.call(self.history,action="speak")
-    
+        return self.LLM.call(self.history, action="speak")
+
     def got_killed(self):
         logging.info('You have been killed.')
-    
+
     def act(self):
-        return self.LLM.call(self.history,action="act")
-    
+        return self.LLM.call(self.history, action="act")
+
     def vote(self):
         """Enters a vote.
 
         Returns:
             str: Name.
         """
-        alive = [identity.name for identity in self.identity.game.identities if identity.alive]
-        return self.LLM.call(f'{self.history}\nEnter your vote. It must be one of the names {alive} or `no one`',action="vote")
+        alive = [
+            identity.name for identity in self.identity.game.identities if identity.alive]
+        return self.LLM.call(f'{self.history}\nEnter your vote. It must be one of the names {alive} or `no one`', action="vote")

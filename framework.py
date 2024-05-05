@@ -1,6 +1,7 @@
 from collections import Counter
 import random
 
+
 class Identity:
     """
     Represents a participant in the game with a specific role, managing the participant's actions, state, and interactions with the game and other participants.
@@ -8,7 +9,7 @@ class Identity:
     item_map = {
         'gun': 'shoot gun',
     }
-    
+
     def __init__(self, role, game, client, name):
         """
         Initializes a new Identity instance.
@@ -37,7 +38,7 @@ class Identity:
             message (str): The message to be spoken.
         """
         self.game.broadcast(f"{self.name} says: {message}")
-    
+
     def heard(self, message):
         """
         Adds a message to the game's transcript as heard by this identity.
@@ -66,9 +67,10 @@ class Identity:
             target (Identity): The target of the action.
         """
         # target_index = self.game.names.index(target_name)
-        target_index = next((index for index, name in enumerate(self.game.names) if name.lower() == target_name.lower()), None)
+        target_index = next((index for index, name in enumerate(
+            self.game.names) if name.lower() == target_name.lower()), None)
         target = self.game.identities[target_index]
-        
+
         if self.blocked or action not in self.actions or not target.alive:
             return
 
@@ -84,7 +86,7 @@ class Identity:
             self.heard(f'{target_name} is {target.role}')
         if action == 'kill':
             target.get_killed()
-    
+
     def night_turn(self):
         """
         Handles the actions and interactions for this identity during the night phase of the game.
@@ -101,7 +103,8 @@ class Identity:
         Handles the actions and interactions for this identity during the day phase of the game.
         """
         if self.alive:
-            self.client.send(f'{self.listen()}. It is Day. Say something and vote.')
+            self.client.send(
+                f'{self.listen()}. It is Day. Say something and vote.')
             response = self.client.respond()
             if response:
                 self.speak(response)
@@ -116,11 +119,13 @@ class Identity:
             self.game.broadcast(f'{self.name} has been killed.')
         else:
             self.game.broadcast(f'{self.name} was attacked but survived.')
-    
+
     def vote(self):
         if self.alive:
-            self.client.send(f'{self.listen()} Who would you like to vote for?')
+            self.client.send(
+                f'{self.listen()} Who would you like to vote for?')
             return self.client.vote()
+
 
 class Game:
     """
@@ -144,9 +149,10 @@ class Game:
         'Bartender': 'Town',
     }
 
-    acting_order = ['Bartender', 'Arms Dealer', 'Cop', 'Doctor', 'Mafia', 'Villager']
+    acting_order = ['Bartender', 'Arms Dealer',
+                    'Cop', 'Doctor', 'Mafia', 'Villager']
 
-    def __init__(self, roles, names, clients):
+    def __init__(self, roles, names, clients, callback):
         """
         Initializes a new Game instance with specified roles.
 
@@ -154,16 +160,25 @@ class Game:
             roles (list): A list of roles to be assigned to the identities in the game.
         """
         roles = sorted(roles, key=self.acting_order.index)
-        self.identities = [Identity(role, self, None, names[index]) for index, role in enumerate(roles)]
+        self.identities = [Identity(role, self, None, names[index])
+                           for index, role in enumerate(roles)]
         self.transcript = []
         self.names = names
         self.roles = roles
+
+        # General-purpose callback for external updates. Params: message_type, data
+        self.callback = callback
+        if not self.callback:
+            self.callback = lambda x, y: None
 
         for identity, client in zip(self.identities, clients):
             identity.client = client
             client.connect(identity)
 
-    def broadcast(self,message):
+        self.callback("game_start", None)
+
+    def broadcast(self, message):
+        self.callback("broadcast", message)
         for identity in self.identities:
             identity.transcript.append(message)
 
@@ -177,13 +192,13 @@ class Game:
         for identity in self.identities:
             identity.blocked = False
             identity.protected = False
-    
+
     def day(self):
         """
         Executes the day phase of the game, involving discussion and voting processes among identities.
         """
         for speaking_round in range(2):
-            order = random.sample(self.identities,len(self.identities))
+            order = random.sample(self.identities, len(self.identities))
             for identity in order:
                 if identity.alive:
                     identity.day_turn()
@@ -191,9 +206,10 @@ class Game:
         votes = [identity.vote() for identity in self.identities]
         vote_counts = Counter(votes)
         max_votes = max(vote_counts.values())
-        most_voted = [name for name, count in vote_counts.items if count == max_votes]
-        chosen = random.choice(most_voted) 
-        if chosen=='nobody':
+        most_voted = [name for name,
+                      count in vote_counts.items if count == max_votes]
+        chosen = random.choice(most_voted)
+        if chosen == 'nobody':
             return
 
         self.identities[self.names.index(chosen)].get_killed()
@@ -205,7 +221,7 @@ class Game:
         """
         self.night()
         self.day()
-    
+
     def play(self):
         """
         Begins and manages the sequence of rounds until the game is over.
@@ -213,7 +229,7 @@ class Game:
         while not self.game_over():
             self.start_round()
         return self.game_over()
-    
+
     def game_over(self):
         """
         Determines whether the game has ended based on the number of Mafia and Town members still alive.
@@ -221,6 +237,8 @@ class Game:
         Returns:
             bool: True if the game is over, False otherwise.
         """
-        mafia_count = sum(1 for identity in self.identities if identity.role == 'Mafia' and identity.alive)
-        town_count = sum(1 for identity in self.identities if identity.role != 'Mafia' and identity.alive)
+        mafia_count = sum(
+            1 for identity in self.identities if identity.role == 'Mafia' and identity.alive)
+        town_count = sum(
+            1 for identity in self.identities if identity.role != 'Mafia' and identity.alive)
         return mafia_count >= town_count

@@ -1,5 +1,8 @@
+<svelte:options accessors />
+
 <script>
   import { cn } from '$lib/utils.js';
+  import { onMount } from 'svelte';
   let className = undefined;
   export let value = undefined;
   export { className as class };
