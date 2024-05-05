@@ -54,10 +54,7 @@ class Identity:
         Returns:
             str: A summary of the current state.
         """
-        text = f"The transcript of the game so far: {self.transcript}"
-        text += f"\nYour role is {self.role}."
-        text += f"\nYou can take the following actions: {self.actions}"
-        text += f"\nYou have the following items: {self.items}"
+        text = f"Game history: {self.transcript}"
         return text
 
     def take_action(self, action, target_name):
@@ -68,7 +65,8 @@ class Identity:
             action (str): The action to be taken.
             target (Identity): The target of the action.
         """
-        target_index = self.game.names.index(target_name)
+        # target_index = self.game.names.index(target_name)
+        target_index = next((index for index, name in enumerate(self.game.names) if name.lower() == target_name.lower()), None)
         target = self.game.identities[target_index]
         
         if self.blocked or action not in self.actions or not target.alive:
@@ -93,9 +91,9 @@ class Identity:
         """
         if self.alive:
             self.client.send(self.listen())
-            response = self.client.respond()
+            response = self.client.act()
             if response:
-                action, target = response.split()
+                action, target = map(str.lower, response.split())
                 self.take_action(action, target)
 
     def day_turn(self):
@@ -115,11 +113,14 @@ class Identity:
         if not self.protected:
             self.alive = False
             self.client.got_killed()
+            self.game.broadcast(f'{self.name} has been killed.')
+        else:
+            self.game.broadcast(f'{self.name} was attacked but survived.')
     
     def vote(self):
         if self.alive:
             self.client.send(f'{self.listen()} Who would you like to vote for?')
-            return self.client.respond()
+            return self.client.vote()
 
 class Game:
     """
@@ -156,6 +157,7 @@ class Game:
         self.identities = [Identity(role, self, None, names[index]) for index, role in enumerate(roles)]
         self.transcript = []
         self.names = names
+        self.roles = roles
 
         for identity, client in zip(self.identities, clients):
             identity.client = client
@@ -191,9 +193,10 @@ class Game:
         max_votes = max(vote_counts.values())
         most_voted = [name for name, count in vote_counts.items if count == max_votes]
         chosen = random.choice(most_voted) 
-        if chosen=='no one':
+        if chosen=='nobody':
             return
-        chosen.get_killed()
+
+        self.identities[self.names.index(chosen)].get_killed()
 
     def start_round(self):
         """

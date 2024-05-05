@@ -1,6 +1,5 @@
-from client import TestBot
-# import asyncio
-from framework import Game, Identity
+from framework import Game
+from console_bot import TestBot
 
 names = ['Alice', 'Bob', 'Charlie']
 prompts = {
@@ -12,10 +11,8 @@ prompts = {
 roles = ['Mafia', 'Cop', 'Doctor']
 
 def main():
-    my_game = Game(roles, names)
     clients = [TestBot(prompts) for _ in range(3)]
-    my_game.connect(clients)
+    my_game = Game(roles, names, clients)
     my_game.play()
 
-# Run the main function until it is complete
 main()
