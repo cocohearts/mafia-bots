@@ -9,7 +9,7 @@ class Identity:
         'gun': 'shoot gun',
     }
     
-    def __init__(self, role, game, client):
+    def __init__(self, role, game, client, name):
         """
         Initializes a new Identity instance.
 
@@ -26,6 +26,8 @@ class Identity:
         self.blocked = False
         self.protected = False
         self.client = client
+        self.name = name
+        self.transcript = []
 
     def speak(self, message):
         """
@@ -34,7 +36,16 @@ class Identity:
         Args:
             message (str): The message to be spoken.
         """
-        self.game.transcript.append(f"{self.role} says: {message}")
+        self.game.broadcast(f"{self.name} says: {message}")
+    
+    def heard(self, message):
+        """
+        Adds a message to the game's transcript as heard by this identity.
+
+        Args:
+            message (str): The message to be heard.
+        """
+        self.transcript.append(f"{message}")
 
     def listen(self):
         """
@@ -43,13 +54,10 @@ class Identity:
         Returns:
             str: A summary of the current state.
         """
-        text = f"The transcript of the game so far: {self.game.transcript}"
-        text += f"\nYour role is {self.role}."
-        text += f"\nYou can take the following actions: {self.actions}"
-        text += f"\nYou have the following items: {self.items}"
+        text = f"Game history: {self.transcript}"
         return text
 
-    def take_action(self, action, target):
+    def take_action(self, action, target_name):
         """
         Executes a specified action against a target identity if possible.
 
@@ -57,6 +65,10 @@ class Identity:
             action (str): The action to be taken.
             target (Identity): The target of the action.
         """
+        # target_index = self.game.names.index(target_name)
+        target_index = next((index for index, name in enumerate(self.game.names) if name.lower() == target_name.lower()), None)
+        target = self.game.identities[target_index]
+        
         if self.blocked or action not in self.actions or not target.alive:
             return
 
@@ -68,28 +80,31 @@ class Identity:
             target.blocked = True
         if action == 'heal':
             target.protected = True
+        if action == 'investigate':
+            self.heard(f'{target_name} is {target.role}')
+        if action == 'kill':
+            target.get_killed()
     
-    async def night_turn(self):
+    def night_turn(self):
         """
         Handles the actions and interactions for this identity during the night phase of the game.
         """
         if self.alive:
             self.client.send(self.listen())
-            response = await self.client.respond()
+            response = self.client.act()
             if response:
-                action, target = response.split()
+                action, target = map(str.lower, response.split())
                 self.take_action(action, target)
 
-    async def day_turn(self):
+    def day_turn(self):
         """
         Handles the actions and interactions for this identity during the day phase of the game.
         """
         if self.alive:
-            self.client.send(self.listen())
-            response = await self.client.respond()
+            self.client.send(f'{self.listen()}. It is Day. Say something and vote.')
+            response = self.client.respond()
             if response:
-                speech = response.split()
-                self.speak(speech)
+                self.speak(response)
 
     def get_killed(self):
         """
@@ -97,6 +112,15 @@ class Identity:
         """
         if not self.protected:
             self.alive = False
+            self.client.got_killed()
+            self.game.broadcast(f'{self.name} has been killed.')
+        else:
+            self.game.broadcast(f'{self.name} was attacked but survived.')
+    
+    def vote(self):
+        if self.alive:
+            self.client.send(f'{self.listen()} Who would you like to vote for?')
+            return self.client.vote()
 
 class Game:
     """
@@ -122,7 +146,7 @@ class Game:
 
     acting_order = ['Bartender', 'Arms Dealer', 'Cop', 'Doctor', 'Mafia', 'Villager']
 
-    def __init__(self, roles):
+    def __init__(self, roles, names, clients):
         """
         Initializes a new Game instance with specified roles.
 
@@ -130,8 +154,18 @@ class Game:
             roles (list): A list of roles to be assigned to the identities in the game.
         """
         roles = sorted(roles, key=self.acting_order.index)
-        self.identities = [Identity(role, self) for role in roles]
+        self.identities = [Identity(role, self, None, names[index]) for index, role in enumerate(roles)]
         self.transcript = []
+        self.names = names
+        self.roles = roles
+
+        for identity, client in zip(self.identities, clients):
+            identity.client = client
+            client.connect(identity)
+
+    def broadcast(self,message):
+        for identity in self.identities:
+            identity.transcript.append(message)
 
     def night(self):
         """
@@ -139,8 +173,7 @@ class Game:
         """
         for identity in self.identities:
             if identity.alive:
-                action = identity.night_turn()
-                self.resolve_action(identity, action)
+                identity.night_turn()
         for identity in self.identities:
             identity.blocked = False
             identity.protected = False
@@ -150,7 +183,7 @@ class Game:
         Executes the day phase of the game, involving discussion and voting processes among identities.
         """
         for speaking_round in range(2):
-            order = random.shuffle(self.identities)
+            order = random.sample(self.identities,len(self.identities))
             for identity in order:
                 if identity.alive:
                     identity.day_turn()
@@ -160,9 +193,10 @@ class Game:
         max_votes = max(vote_counts.values())
         most_voted = [name for name, count in vote_counts.items if count == max_votes]
         chosen = random.choice(most_voted) 
-        if chosen=='no one':
+        if chosen=='nobody':
             return
-        chosen.get_killed()
+
+        self.identities[self.names.index(chosen)].get_killed()
 
     def start_round(self):
         """
@@ -177,6 +211,7 @@ class Game:
         """
         while not self.game_over():
             self.start_round()
+        return self.game_over()
     
     def game_over(self):
         """
