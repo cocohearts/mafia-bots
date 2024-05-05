@@ -152,7 +152,7 @@ class Game:
     acting_order = ['Bartender', 'Arms Dealer',
                     'Cop', 'Doctor', 'Mafia', 'Villager']
 
-    def __init__(self, roles, names, clients):
+    def __init__(self, roles, names, clients, callback):
         """
         Initializes a new Game instance with specified roles.
 
@@ -166,11 +166,19 @@ class Game:
         self.names = names
         self.roles = roles
 
+        # General-purpose callback for external updates. Params: message_type, data
+        self.callback = callback
+        if not self.callback:
+            self.callback = lambda x, y: None
+
         for identity, client in zip(self.identities, clients):
             identity.client = client
             client.connect(identity)
 
+        self.callback("game_start", None)
+
     def broadcast(self, message):
+        self.callback("broadcast", message)
         for identity in self.identities:
             identity.transcript.append(message)
 
