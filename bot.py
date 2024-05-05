@@ -18,7 +18,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 load_dotenv()
 
-octoai = OctoAI(api_key=os.environ["OCTOAI_TOKEN"])
+# octoai = OctoAI(api_key=os.environ["OCTOAI_TOKEN"])
 client = OpenAI(
     # This is the default and can be omitted
     api_key=os.environ.get("OPENAI_API_KEY"),
@@ -31,7 +31,7 @@ class LLM:
     def call(self, query, action="speak"):
         rules = {
             "speak": "\nSpeak to the rest of the players. Communicate or obfuscate your intentions. You only have two sentences, so use them wisely.",
-            "act": "\nChoose an action. You must respond with your action and your target in exactly two words.",
+            "act": "\nChoose an action. You must respond with your action and your target in exactly two words. Do not use `myself`, use names.",
             "vote": "\nVote someone to kill. You must respond with the name of the person you want to vote for in exactly one word."
         }
         logging.info(self.prompt)
@@ -64,10 +64,14 @@ import os
 class Bot:
     def __init__(self, prompts):
         self.prompts = prompts
+        with open('base_prompt.txt', 'r') as file:
+            self.base_prompt = file.read()
+
 
     def connect(self, identity):
         self.identity = identity
-        prompt = f'\nNames are {self.identity.game.names}'
+        prompt = self.base_prompt
+        prompt += f'\nNames are {self.identity.game.names}'
         prompt += f'\nRoles are {random.sample(self.identity.game.roles,len(self.identity.game.roles))}, in random order'
         prompt += f'\nYour name is {self.identity.name}'
         prompt += f'\nYour role is {self.identity.role}'
@@ -109,4 +113,4 @@ class Bot:
         """
         alive = [
             identity.name for identity in self.identity.game.identities if identity.alive]
-        return self.LLM.call(f'{self.history}\nEnter your vote. It must be one of the names {alive} or `no one`', action="vote")
+        return self.LLM.call(f'{self.history}\nEnter your vote. It must be one of the names {alive} or `nobody`', action="vote")
