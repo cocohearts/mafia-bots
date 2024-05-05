@@ -128,6 +128,8 @@ class Identity:
             self.client.got_killed()
             self.game.broadcast(f'{self.name} has been killed.')
             self.game.callback("got_killed", self.name)
+            if result := self.game.game_over():
+                self.game.callback("game_over", self.game.game_over())
         else:
             self.game.broadcast(f'{self.name} was attacked but survived.')
             self.game.callback("got_killed_saved", self.name)
@@ -137,7 +139,8 @@ class Identity:
             self.client.send(
                 f'{self.listen()} Who would you like to vote for?')
             candidate = self.client.vote()
-            self.game.callback("vote", { "voter": self.name, "candidate": candidate })
+            self.game.callback(
+                "vote", {"voter": self.name, "candidate": candidate})
             return candidate
 
 
@@ -219,7 +222,7 @@ class Game:
         votes = [identity.vote() for identity in self.identities]
         vote_counts = Counter(votes)
         max_votes = max(vote_counts.values())
-        most_voted = [name.strip() for name, \
+        most_voted = [name.strip() for name,
                       count in vote_counts.items() if count == max_votes]
         chosen = random.choice(most_voted)
         if chosen == 'nobody':
@@ -239,9 +242,9 @@ class Game:
         """
         Begins and manages the sequence of rounds until the game is over.
         """
-        while not self.game_over():
+        while not (result := self.game_over()):
             self.start_round()
-        return self.game_over()
+        return result
 
     def game_over(self):
         """
@@ -254,4 +257,12 @@ class Game:
             1 for identity in self.identities if identity.role == 'Mafia' and identity.alive)
         town_count = sum(
             1 for identity in self.identities if identity.role != 'Mafia' and identity.alive)
-        return mafia_count >= town_count
+        if mafia_count >= town_count:
+            result = "Mafia"
+        if mafia_count == 0:
+            result = "Town"
+        else:
+            result = None
+        return result
+        if result := self.game_over():
+            return self.callback("game_over", result)

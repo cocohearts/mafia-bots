@@ -1,4 +1,5 @@
 import octoai
+from openai import OpenAI
 import json
 from octoai.client import OctoAI
 from octoai.text_gen import ChatMessage
@@ -18,6 +19,10 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 load_dotenv()
 
 octoai = OctoAI(api_key=os.environ["OCTOAI_TOKEN"])
+client = OpenAI(
+    # This is the default and can be omitted
+    api_key=os.environ.get("OPENAI_API_KEY"),
+)
 
 class LLM:
     def __init__(self, prompt):
@@ -31,17 +36,30 @@ class LLM:
         }
         logging.info(self.prompt)
         logging.info(query + rules[action])
-        completion = octoai.text_gen.create_chat_completion(
-            model="llama-2-70b-chat",
+        
+        
+        completion = client.chat.completions.create(
+            model="gpt-4-turbo",
             messages=[
-                ChatMessage(role="system", content=self.prompt),
-                ChatMessage(role="user", content=query + rules[action]),
+                {
+                    "role": "system",
+                    "content":self.prompt
+                },
+                {
+                    "role": "user",
+                    "content": query + rules[action]
+                }
+                # ChatMessage(role="system", content=self.prompt),
+                # ChatMessage(role="user", content=query + rules[action]),
             ],
             max_tokens=300,
         )
         response = completion.choices[0].message.content
         logging.info(response)
         return response
+
+import os
+
 
 
 class Bot:
