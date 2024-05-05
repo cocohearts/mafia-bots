@@ -19,6 +19,10 @@ app.config['SECRET_KEY'] = 'secret!'
 # https://stackoverflow.com/questions/29187933/flask-socketio-cors
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+# Store a dictionary of active games
+# key is username, value is game
+games = {}
+
 def emit_message(author, content):
     emit('message', {
         'timestamp': dt.datetime.now().timestamp(),
@@ -30,11 +34,15 @@ def emit_message(author, content):
 def handle_connect():
     pass
 
+@socketio.on('new_game')
+def handle_new_game():
+    username = session['username']
+    games[username] = Game()
+
 @socketio.on('set_username')
 def set_username(data):
     print(f"set username to:", data)
-    session['username'] = data    
-    emit("system", "welcome to mafia bots!")
+    session['username'] = data
 
 @socketio.on('message')
 def handle_message(data):
