@@ -98,6 +98,11 @@ class Identity:
             if response:
                 action, target = map(str.lower, response.split())
                 self.take_action(action, target)
+                self.game.callback("night_turn", {
+                    "player": self.name,
+                    "action": action,
+                    "target": target
+                })
 
     def day_turn(self):
         """
@@ -109,6 +114,10 @@ class Identity:
             response = self.client.respond()
             if response:
                 self.speak(response)
+                self.game.callback("day_turn", {
+                    "player": self.name,
+                    "response": response
+                })
 
     def get_killed(self):
         """
@@ -118,14 +127,18 @@ class Identity:
             self.alive = False
             self.client.got_killed()
             self.game.broadcast(f'{self.name} has been killed.')
+            self.game.callback("got_killed", self.name)
         else:
             self.game.broadcast(f'{self.name} was attacked but survived.')
+            self.game.callback("got_killed_saved", self.name)
 
     def vote(self):
         if self.alive:
             self.client.send(
                 f'{self.listen()} Who would you like to vote for?')
-            return self.client.vote()
+            candidate = self.client.vote()
+            self.game.callback("vote", { "voter": self.name, "candidate": candidate })
+            return candidate
 
 
 class Game:
@@ -179,7 +192,6 @@ class Game:
         self.callback("game_start", None)
 
     def broadcast(self, message):
-        self.callback("broadcast", message)
         for identity in self.identities:
             identity.transcript.append(message)
 
@@ -207,8 +219,8 @@ class Game:
         votes = [identity.vote() for identity in self.identities]
         vote_counts = Counter(votes)
         max_votes = max(vote_counts.values())
-        most_voted = [name for name, \
-                      count in vote_counts.items if count == max_votes]
+        most_voted = [name.strip() for name, \
+                      count in vote_counts.items() if count == max_votes]
         chosen = random.choice(most_voted)
         if chosen == 'nobody':
             return

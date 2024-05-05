@@ -40,7 +40,7 @@ def handle_new_game():
     username = session['username']
 
     def callback(message_type, data):
-        print(f"[game callback | {message_type}] {data}")
+        print(f"[game callback | {message_type}] {str(data)[:50]}")
         """ if message_type == "game_start":
             emit(message_type, data) """
         emit_message("system", f"[{message_type}] {data}")
