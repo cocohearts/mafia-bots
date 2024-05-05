@@ -18,7 +18,16 @@
       socket.emit('set_username', localStorage.getItem('username'));
     });
 
-    return () => socket.off('connect');
+    socket.on('message', (data) => {
+      let raw_timestamp = data.timestamp;
+      data.timestamp = new Date(raw_timestamp * 1000);
+      messages = [...messages, data];
+    });
+
+    return () => {
+      socket.off('connect');
+      socket.off('message');
+    };
   }, []);
 
   // Page variables
@@ -46,7 +55,9 @@
             <span class="text-muted-foreground"
               >{message.timestamp.toLocaleTimeString()}</span
             >
-            <span class="text-muted-foreground">{message.author}</span>
+            <span class="text-muted-foreground"
+              >{message.author.split('-')[0]}</span
+            >
             <span>{message.content}</span>
           </div>
         {/each}
