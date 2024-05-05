@@ -70,8 +70,6 @@ class Identity:
         # target_index = self.game.names.index(target_name)
         target_index = next((index for index, name in enumerate(
             self.game.names) if name.lower() == target_name.lower()), None)
-        print(target_index)
-        print(target_name)
         target = self.game.identities[target_index]
 
         if self.blocked or action not in self.actions or not target.alive:

@@ -18,7 +18,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 load_dotenv()
 
-octoai = OctoAI(api_key=os.environ["OCTOAI_TOKEN"])
+# octoai = OctoAI(api_key=os.environ["OCTOAI_TOKEN"])
 client = OpenAI(
     # This is the default and can be omitted
     api_key=os.environ.get("OPENAI_API_KEY"),
