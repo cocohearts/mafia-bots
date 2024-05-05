@@ -33,7 +33,7 @@
     socket.on('message', (data) => {
       let raw_timestamp = data.timestamp;
       data.timestamp = new Date(raw_timestamp * 1000);
-      messages = [...messages, data];
+      messages = [data, ...messages];
     });
 
     return () => {
@@ -55,33 +55,35 @@
   </div>
 
   <!-- Main body -->
-  <div class="flex flex-grow divide-x">
+  <div class="flex flex-grow divide-x overflow-y-hidden">
     <div class="w-80 p-2">
       <Button
         class="flex w-full gap-2"
-        variant="outline"
         on:click={() => socket.emit('new_game')}
       >
         <PlusIcon /><span>New game</span></Button
       >
+      <Button variant="outline"></Button>
     </div>
 
     <!-- Chat column -->
     <div class="flex w-full flex-col">
       <!-- Chat messages -->
-      <div class="flex flex-grow flex-col">
+      <table
+        class="flex flex-grow border-spacing-2 flex-col-reverse overflow-y-auto"
+      >
         {#each messages as message}
-          <div class="flex gap-2 px-4 py-1 text-sm">
-            <span class="text-muted-foreground"
-              >{message.timestamp.toLocaleTimeString()}</span
+          <tr class="px-4 py-1 align-top text-sm">
+            <td class="text-muted-foreground whitespace-pre"
+              >{message.timestamp.toLocaleTimeString()}</td
             >
-            <span class="text-muted-foreground"
-              >{message.author.split('-')[0]}</span
+            <td class="text-muted-foreground px-2"
+              >{message.author.split('-')[0]}</td
             >
-            <span>{message.content}</span>
-          </div>
+            <td>{message.content}</td>
+          </tr>
         {/each}
-      </div>
+      </table>
 
       <!-- Chat input -->
       <div class="flex gap-2 p-2">

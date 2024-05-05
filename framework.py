@@ -101,6 +101,11 @@ class Identity:
                 if self.role != 'Villager':
                     action, target = map(str.lower, response.split())
                     self.take_action(action, target)
+                    self.game.callback("night_turn", {
+                        "player": self.name,
+                        "action": action,
+                        "target": target
+                    })
 
     def day_turn(self):
         """
@@ -112,6 +117,10 @@ class Identity:
             response = self.client.respond()
             if response:
                 self.speak(response)
+                self.game.callback("day_turn", {
+                    "player": self.name,
+                    "response": response
+                })
 
     def get_killed(self):
         """
@@ -121,16 +130,21 @@ class Identity:
             self.alive = False
             self.client.got_killed()
             self.game.broadcast(f'{self.name} has been killed.')
-            if result:=self.game.game_over():
+            self.game.callback("got_killed", self.name)
+            if result := self.game.game_over():
                 self.game.callback("game_over", self.game.game_over())
         else:
             self.game.broadcast(f'{self.name} was attacked but survived.')
+            self.game.callback("got_killed_saved", self.name)
 
     def vote(self):
         if self.alive:
             self.client.send(
                 f'{self.listen()} Who would you like to vote for?')
-            return self.client.vote()
+            candidate = self.client.vote()
+            self.game.callback(
+                "vote", {"voter": self.name, "candidate": candidate})
+            return candidate
 
 
 class Game:
@@ -166,7 +180,7 @@ class Game:
             roles (list): A list of roles to be assigned to the identities in the game.
         """
         roles = sorted(roles, key=self.acting_order.index)
-        self.identities = [Identity(role, self, None, names[index]) \
+        self.identities = [Identity(role, self, None, names[index])
                            for index, role in enumerate(roles)]
         self.transcript = []
         self.names = names
@@ -184,7 +198,6 @@ class Game:
         self.callback("game_start", None)
 
     def broadcast(self, message):
-        self.callback("broadcast", message)
         for identity in self.identities:
             identity.transcript.append(message)
 
@@ -213,7 +226,7 @@ class Game:
         vote_counts = Counter(votes)
         max_votes = max(vote_counts.values())
         most_voted = [name for name, \
-                      count in vote_counts.items() if count == max_votes]
+                      count in vote_counts.items if count == max_votes]
         chosen = random.choice(most_voted)
         if chosen == 'nobody':
             return
@@ -232,7 +245,7 @@ class Game:
         """
         Begins and manages the sequence of rounds until the game is over.
         """
-        while not (result:=self.game_over()):
+        while not (result := self.game_over()):
             self.start_round()
         return result
 

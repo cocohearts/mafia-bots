@@ -30,7 +30,7 @@ class LLM:
 
     def call(self, query, action="speak"):
         rules = {
-            "speak": "\nSpeak to the rest of the players. Communicate or obfuscate your intentions. You only have 100 words, use them wisely.",
+            "speak": "\nSpeak to the rest of the players. Communicate or obfuscate your intentions. You only have two sentences, so use them wisely.",
             "act": "\nChoose an action. You must respond with your action and your target in exactly two words.",
             "vote": "\nVote someone to kill. You must respond with the name of the person you want to vote for in exactly one word."
         }
