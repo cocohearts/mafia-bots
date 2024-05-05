@@ -1,9 +1,11 @@
 <script>
   import { onMount } from 'svelte';
+  import { socket } from '$lib/socketio';
 
   import Button from '$lib/components/ui/button/button.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
-  import { socket } from '$lib/socketio';
+
+  import { PlusIcon } from 'svelte-feather-icons';
 
   let chatInputElement;
   const sendChatMessage = () => {
@@ -54,7 +56,15 @@
 
   <!-- Main body -->
   <div class="flex flex-grow divide-x">
-    <div class="w-80"></div>
+    <div class="w-80 p-2">
+      <Button
+        class="flex w-full gap-2"
+        variant="outline"
+        on:click={() => socket.emit('new_game')}
+      >
+        <PlusIcon /><span>New game</span></Button
+      >
+    </div>
 
     <!-- Chat column -->
     <div class="flex w-full flex-col">

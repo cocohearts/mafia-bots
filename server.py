@@ -39,6 +39,12 @@ def handle_connect():
 def handle_new_game():
     username = session['username']
 
+    def callback(message_type, data):
+        print(f"[game callback | {message_type}] {data}")
+        """ if message_type == "game_start":
+            emit(message_type, data) """
+        emit_message("system", f"[{message_type}] {data}")
+
     names = ['Alice', 'Bob', 'Charlie']
     prompts = {
         'Doctor': 'You are the Doctor. Your goal is to uncover and vote to eliminate the Mafia. Use your powers carefully, and do not reveal that you are the Doctor, otherwise you may be targeted by the Mafia.\n',
@@ -48,7 +54,8 @@ def handle_new_game():
     }
     roles = ['Mafia', 'Cop', 'Doctor']
     clients = [Bot(prompts) for _ in range(3)]
-    games[username] = Game(roles=roles, names=names, clients=clients)
+    games[username] = Game(roles=roles, names=names, clients=clients, callback=callback)
+    games[username].play()
 
 @socketio.on('set_username')
 def set_username(data):

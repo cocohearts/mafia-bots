@@ -17,7 +17,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 load_dotenv()
 
-octoai = OctoAI()
+octoai = OctoAI(api_key=os.environ["OCTOAI_TOKEN"])
 
 class LLM:
     def __init__(self, prompt):
