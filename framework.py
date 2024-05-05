@@ -145,7 +145,7 @@ class Game:
 
     acting_order = ['Bartender', 'Arms Dealer', 'Cop', 'Doctor', 'Mafia', 'Villager']
 
-    def __init__(self, roles, names):
+    def __init__(self, roles, names, clients):
         """
         Initializes a new Game instance with specified roles.
 
@@ -157,11 +157,10 @@ class Game:
         self.transcript = []
         self.names = names
 
-    def connect(self, clients):
         for identity, client in zip(self.identities, clients):
             identity.client = client
             client.connect(identity)
-    
+
     def broadcast(self,message):
         for identity in self.identities:
             identity.transcript.append(message)
