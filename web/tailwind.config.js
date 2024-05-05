@@ -13,7 +13,6 @@ const config = {
         '2xl': '1400px',
       },
     },
-    fontFamily: { sans: ['Inter', 'Arial', 'sans-serif'] },
     extend: {
       colors: {
         border: 'hsl(var(--border) / <alpha-value>)',
@@ -56,7 +55,7 @@ const config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: [...fontFamily.sans],
+        sans: ['Inter', 'Arial', 'sans-serif'],
       },
     },
   },
