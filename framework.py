@@ -135,7 +135,7 @@ class Identity:
                 self.game.callback("game_over", self.game.game_over())
         else:
             self.game.broadcast(f'{self.name} was attacked but survived.')
-            self.game.callback("got_killed_saved", self.name)
+            self.game.callback("got_attacked_saved", self.name)
 
     def vote(self):
         if self.alive:
@@ -196,7 +196,11 @@ class Game:
             identity.client = client
             client.connect(identity)
 
-        self.callback("game_start", None)
+        self.callback("game_start", [{
+            "role": ident.role,
+            "name": ident.name,
+            "alignment": ident.alignment
+        } for ident in self.identities])
 
     def broadcast(self, message):
         for identity in self.identities:
@@ -239,9 +243,9 @@ class Game:
         """
         Starts a new round of the game, consisting of both night and day phases.
         """
-        self.broadcast("night", self.day_count)
+        self.callback("night", self.day_count)
         self.night()
-        self.broadcast("day", self.day_count)
+        self.callback("day", self.day_count)
         self.day()
         self.day_count += 1
 

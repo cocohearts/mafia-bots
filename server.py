@@ -24,6 +24,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # key is username, value is game
 games = {}
 
+
 def emit_message(author, content):
     emit('message', {
         'timestamp': dt.datetime.now().timestamp(),
@@ -31,40 +32,66 @@ def emit_message(author, content):
         'content': content
     })
 
+
 @socketio.on('connect')
 def handle_connect():
     pass
+
 
 @socketio.on('new_game')
 def handle_new_game():
     username = session['username']
 
     def callback(message_type, data):
+        """ if message_type == "game_start":
+            pass
+        elif message_type == "night":
+            pass
+        elif message_type == "day":
+            pass
+        elif message_type == "night_turn":
+            pass
+        elif message_type == "day_turn":
+            pass
+        elif message_type == "got_killed":
+            pass
+        elif message_type == "got_attacked_saved":
+            pass
+        elif message_type == "vote":
+            pass
+        elif message_type == "game_over":
+            pass """
+
         print(f"[game callback | {message_type}] {str(data)[:50]}")
         emit_message("system", f"[{message_type}] {data}")
 
-    names = ['Alice', 'Bob', 'Charlie', 'David', 'Ellie', 'Frank']
     prompts = {
-        'Doctor': 'You are the Doctor. Your goal is to uncover and vote to eliminate the Mafia. Use your powers carefully, and do not reveal that you are the Doctor, otherwise you may be targeted by the Mafia.\n',
-        'Cop': 'You are the Cop. Your goal is to uncover and vote to eliminate the Mafia. Use your powers carefully, and do not reveal that you are the Cop, otherwise you may be targeted by the Mafia.\n',
-        'Mafia': 'You are the Mafia. Your goal is to kill all of the Townspeople without being revealed and voted off.\n',
-        'Villager': 'You are a Villager. Your goal is to uncover and vote to eliminate the Mafia.\n'
+        'Doctor': 'Your goal is to uncover and vote to eliminate the Mafia. Use your powers carefully, and do not reveal that you are the Doctor, otherwise you may be targeted by the Mafia.\n',
+        'Cop': 'Your goal is to uncover and vote to eliminate the Mafia. Use your powers carefully, and do not reveal that you are the Cop, otherwise you may be targeted by the Mafia.\n',
+        'Mafia': 'Your goal is to kill all of the Townspeople without being revealed and voted off.\n',
+        'Villager': 'Your goal is to uncover and vote to eliminate the Mafia.\n'
     }
-    roles = ['Mafia', 'Cop', 'Doctor', 'Villager']
-    clients = [Bot(prompts) for _ in range(3)]
-    games[username] = Game(roles=roles, names=names, clients=clients, callback=callback)
+    roles = ['Mafia', 'Cop', 'Doctor', 'Villager', 'Villager', 'Villager']
+    names = ['Alice', 'Bob', 'Charlie', "Daniel", "Eve", "Frank"]
+    clients = [Bot(prompts) for _ in range(len(names))]
+
+    games[username] = Game(roles=roles, names=names,
+                           clients=clients, callback=callback)
     games[username].play()
+
 
 @socketio.on('set_username')
 def set_username(data):
     print(f"set username to:", data)
     session['username'] = data
 
+
 @socketio.on('message')
 def handle_message(data):
     # Ping messages back to user
     username = session['username']
     emit_message(username, data)
+
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
