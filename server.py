@@ -64,6 +64,7 @@ def handle_new_game():
 
         print(f"[game callback | {message_type}] {str(data)[:50]}")
         emit_message("system", f"[{message_type}] {data}")
+        emit(message_type, data)
 
     prompts = {
         'Doctor': 'Your goal is to uncover and vote to eliminate the Mafia. Use your powers carefully, and do not reveal that you are the Doctor, otherwise you may be targeted by the Mafia.\n',

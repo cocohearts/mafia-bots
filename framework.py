@@ -197,7 +197,8 @@ class Game:
         self.callback("game_start", [{
             "role": ident.role,
             "name": ident.name,
-            "alignment": ident.alignment
+            "alignment": ident.alignment,
+            "alive": True
         } for ident in self.identities])
 
     def broadcast(self, message):

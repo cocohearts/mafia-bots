@@ -28,7 +28,7 @@
     });
 
     // Game message types
-    /* const handlers = {
+    const handlers = {
       game_start: (data) => {
         messages = [
           ...messages,
@@ -40,11 +40,25 @@
         ];
         players = data;
       },
+      day: (data) => {
+        dayCounter = `Day <b>${data}</b>`;
+      },
+      night: (data) => {
+        dayCounter = `Night <b>${data}</b>`;
+      },
+      got_killed: (data) => {
+        players = players.map((player) => {
+          if (player.name.toLowerCase() === data.toLowerCase()) {
+            return { ...player, alive: false };
+          }
+          return player;
+        });
+      },
     };
 
     Object.entries(handlers).forEach(([handler_type, callback]) => {
       socket.on(handler_type, (data) => callback(data));
-    }); */
+    });
 
     socket.on('message', (data) => {
       let raw_timestamp = data.timestamp;
@@ -62,6 +76,7 @@
   // Page variables
   let messages = [];
   let players = [];
+  let dayCounter = 'Day <b>0</b>';
 </script>
 
 <div class="flex h-screen flex-col">
@@ -76,7 +91,13 @@
   <!-- Main body -->
   <div class="flex flex-grow divide-x overflow-y-hidden">
     <div class="flex w-80 flex-col gap-2 p-2">
-      <Button class="flex gap-2" on:click={() => socket.emit('new_game')}>
+      <Button
+        class="flex gap-2"
+        on:click={() => {
+          messages = [];
+          socket.emit('new_game');
+        }}
+      >
         <PlusIcon /><span>New game</span></Button
       >
       <Button variant="outline" on:click={() => (messages = [])}
@@ -85,16 +106,19 @@
 
       <!-- Game status -->
       <div class="p-2">
-        <div>Day 0</div>
+        <div>{@html dayCounter}</div>
 
-        <div class="mt-4 flex gap-2 text-sm">
-          {#each players as { name, role, alignment }}
+        <div class="mt-4 flex flex-col gap-2 text-sm">
+          {#each players as { name, role, alignment, alive }}
             <div class="flex items-center gap-4">
-              <span>{name} ({role})</span>
+              <span
+                class={cn(!alive ? 'text-muted-foreground line-through' : '')}
+                >{name} ({role})</span
+              >
               <div
                 class={cn(
                   'ml-auto h-4 w-4 rounded-full',
-                  alignment === 'Mafia' ? 'bg-red-600' : 'bg-blue-600',
+                  alignment === 'Mafia' ? 'bg-red-400' : 'bg-blue-400',
                 )}
               ></div>
             </div>
