@@ -118,6 +118,8 @@ class Identity:
             self.alive = False
             self.client.got_killed()
             self.game.broadcast(f'{self.name} has been killed.')
+            if result:=self.game.game_over():
+                self.game.callback("game_over", self.game.game_over())
         else:
             self.game.broadcast(f'{self.name} was attacked but survived.')
 
@@ -161,7 +163,7 @@ class Game:
             roles (list): A list of roles to be assigned to the identities in the game.
         """
         roles = sorted(roles, key=self.acting_order.index)
-        self.identities = [Identity(role, self, None, names[index])
+        self.identities = [Identity(role, self, None, names[index]) \
                            for index, role in enumerate(roles)]
         self.transcript = []
         self.names = names
@@ -227,9 +229,9 @@ class Game:
         """
         Begins and manages the sequence of rounds until the game is over.
         """
-        while not self.game_over():
+        while not (result:=self.game_over()):
             self.start_round()
-        return self.game_over()
+        return result
 
     def game_over(self):
         """
@@ -242,4 +244,12 @@ class Game:
             1 for identity in self.identities if identity.role == 'Mafia' and identity.alive)
         town_count = sum(
             1 for identity in self.identities if identity.role != 'Mafia' and identity.alive)
-        return mafia_count >= town_count
+        if mafia_count >= town_count:
+            result = "Mafia"
+        if mafia_count == 0:
+            result = "Town"
+        else:
+            result = None
+        return result
+        if result := self.game_over():
+            return self.callback("game_over", result)
