@@ -29,6 +29,7 @@ class Identity:
         self.client = client
         self.name = name
         self.transcript = []
+        self.alignment = Game.role_alignments[role]
 
     def speak(self, message):
         """
@@ -206,7 +207,7 @@ class Game:
         votes = [identity.vote() for identity in self.identities]
         vote_counts = Counter(votes)
         max_votes = max(vote_counts.values())
-        most_voted = [name for name,
+        most_voted = [name for name, \
                       count in vote_counts.items if count == max_votes]
         chosen = random.choice(most_voted)
         if chosen == 'nobody':

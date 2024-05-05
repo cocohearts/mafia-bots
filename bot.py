@@ -8,15 +8,16 @@ import random
 
 import logging
 import sys
+
 logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 # logging.debug('A debug message!')
 
 # logging.info('We processed %d records', len(processed_records))
 
-# load_dotenv()
-octoai = OctoAI()
+load_dotenv()
 
+octoai = OctoAI()
 
 class LLM:
     def __init__(self, prompt):
@@ -24,9 +25,9 @@ class LLM:
 
     def call(self, query, action="speak"):
         rules = {
-            "speak": "\nSpeak to the rest of the players. Communicate or obfuscate your intentions. You only have 100 tokens.",
-            "act": "\nChoose an action. You must respond with exactly two words, the first being your action, and the second being the name of your target (could be yourself).",
-            "vote": "\nVote someone to kill. You must respond with exactly one word, the name of the person you want to vote for."
+            "speak": "\nSpeak to the rest of the players. Communicate or obfuscate your intentions. You only have 100 words, use them wisely.",
+            "act": "\nChoose an action. You must respond with your action and your target in exactly two words.",
+            "vote": "\nVote someone to kill. You must respond with the name of the person you want to vote for in exactly one word."
         }
         logging.info(self.prompt)
         logging.info(query + rules[action])
@@ -36,7 +37,7 @@ class LLM:
                 ChatMessage(role="system", content=self.prompt),
                 ChatMessage(role="user", content=query + rules[action]),
             ],
-            max_tokens=100,
+            max_tokens=300,
         )
         response = completion.choices[0].message.content
         logging.info(response)
@@ -53,6 +54,7 @@ class Bot:
         prompt += f'\nRoles are {random.sample(self.identity.game.roles,len(self.identity.game.roles))}, in random order'
         prompt += f'\nYour name is {self.identity.name}'
         prompt += f'\nYour role is {self.identity.role}'
+        prompt += f'\nYour alignment is {self.identity.alignment}'
         prompt += f"\nYou can take the following actions: {self.identity.actions}"
         prompt += f"\nYou have the following items: {self.identity.items}"
         prompt += f"\n{self.prompts[identity.role]}"
