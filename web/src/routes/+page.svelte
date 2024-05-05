@@ -56,14 +56,13 @@
 
   <!-- Main body -->
   <div class="flex flex-grow divide-x overflow-y-hidden">
-    <div class="w-80 p-2">
-      <Button
-        class="flex w-full gap-2"
-        on:click={() => socket.emit('new_game')}
-      >
+    <div class="flex w-80 flex-col gap-2 p-2">
+      <Button class="flex gap-2" on:click={() => socket.emit('new_game')}>
         <PlusIcon /><span>New game</span></Button
       >
-      <Button variant="outline"></Button>
+      <Button variant="outline" on:click={() => (messages = [])}
+        >Clear chat</Button
+      >
     </div>
 
     <!-- Chat column -->

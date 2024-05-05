@@ -182,6 +182,7 @@ class Game:
         self.transcript = []
         self.names = names
         self.roles = roles
+        self.day_count = 1
 
         # General-purpose callback for external updates. Params: message_type, data
         self.callback = callback
@@ -222,7 +223,7 @@ class Game:
         votes = [identity.vote() for identity in self.identities]
         vote_counts = Counter(votes)
         max_votes = max(vote_counts.values())
-        most_voted = [name.strip() for name,
+        most_voted = [name.strip() if name else None for name,
                       count in vote_counts.items() if count == max_votes]
         chosen = random.choice(most_voted)
         if chosen == 'nobody':
@@ -235,8 +236,11 @@ class Game:
         """
         Starts a new round of the game, consisting of both night and day phases.
         """
+        self.broadcast("night", self.day_count)
         self.night()
+        self.broadcast("day", self.day_count)
         self.day()
+        self.day_count += 1
 
     def play(self):
         """

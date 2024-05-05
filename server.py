@@ -41,18 +41,16 @@ def handle_new_game():
 
     def callback(message_type, data):
         print(f"[game callback | {message_type}] {str(data)[:50]}")
-        """ if message_type == "game_start":
-            emit(message_type, data) """
         emit_message("system", f"[{message_type}] {data}")
 
-    names = ['Alice', 'Bob', 'Charlie']
+    names = ['Alice', 'Bob', 'Charlie', 'David', 'Ellie', 'Frank']
     prompts = {
         'Doctor': 'You are the Doctor. Your goal is to uncover and vote to eliminate the Mafia. Use your powers carefully, and do not reveal that you are the Doctor, otherwise you may be targeted by the Mafia.\n',
         'Cop': 'You are the Cop. Your goal is to uncover and vote to eliminate the Mafia. Use your powers carefully, and do not reveal that you are the Cop, otherwise you may be targeted by the Mafia.\n',
         'Mafia': 'You are the Mafia. Your goal is to kill all of the Townspeople without being revealed and voted off.\n',
         'Villager': 'You are a Villager. Your goal is to uncover and vote to eliminate the Mafia.\n'
     }
-    roles = ['Mafia', 'Cop', 'Doctor']
+    roles = ['Mafia', 'Cop', 'Doctor', 'Villager']
     clients = [Bot(prompts) for _ in range(3)]
     games[username] = Game(roles=roles, names=names, clients=clients, callback=callback)
     games[username].play()
