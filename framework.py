@@ -1,7 +1,6 @@
 from collections import Counter
 import random
 
-
 class Identity:
     """
     Represents a participant in the game with a specific role, managing the participant's actions, state, and interactions with the game and other participants.
